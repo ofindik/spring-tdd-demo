@@ -9,6 +9,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -37,25 +38,48 @@ public class PostControllerTest {
 
 	@Test
 	void shouldFineAllPosts () throws Exception {
-		String jsonResponse = """
+		when (postRepository.findAll ()).thenReturn (posts);
+
+		var post1 = posts.get (0);
+		var post2 = posts.get (1);
+		var jsonResponse = STR. """
 							[
 								{
-										"id":1,
-										"userId":1,
-										"title":"First Post",
-										"body":"This is first post"
+										"id":\{ post1.id () },
+										"userId":\{ post1.userId () },
+										"title":"\{ post1.title () }",
+										"body":"\{ post1.body () }",
+										"version":null
 								},
 								{
-										"id":2,
-										"userId":1,
-										"title":"Second Post",
-										"body":"This is second post"
+										"id":\{ post2.id () },
+										"userId":\{ post2.userId () },
+										"title":"\{ post2.title () }",
+										"body":"\{ post2.body () }",
+										"version":null
 								}
 							]
-				""";
-
-		when (postRepository.findAll ()).thenReturn (posts);
+				""" ;
 		mockMvc.perform (get ("/api/posts"))
+				.andExpect (status ().isOk ())
+				.andExpect (content ().json (jsonResponse));
+	}
+
+	@Test
+	void shouldfindPostWhenValidIDIsGiven () throws Exception {
+		when (postRepository.findById (1)).thenReturn (Optional.of (posts.get (0)));
+
+		var post = posts.get (0);
+		var jsonResponse = STR. """
+							{
+								"id":\{ post.id () },
+								"userId":\{ post.userId () },
+								"title":"\{ post.title () }",
+								"body":"\{ post.body () }",
+								"version":null
+							}
+				""" ;
+		mockMvc.perform (get ("/api/posts/1"))
 				.andExpect (status ().isOk ())
 				.andExpect (content ().json (jsonResponse));
 
